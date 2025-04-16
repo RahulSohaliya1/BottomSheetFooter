@@ -66,6 +66,11 @@ public enum VisualEffect: Equatable, Hashable {
         @available(macCatalyst, unavailable)
         case headerView(behindWindow: Bool)
         
+        @available(macOS 10.15, *)
+        @available(iOS, unavailable)
+        @available(macCatalyst, unavailable)
+        case footerView(behindWindow: Bool)
+        
         /// A material used for the background of a content view, e.g. a scroll
         /// view or a list.
         /// - Parameter behindWindow: `true` if the effect should use
@@ -148,6 +153,7 @@ fileprivate extension VisualEffect {
             case .default, .contentBackground: return .contentBackground
             case .titlebar: return .titlebar
             case .headerView: return .headerView
+            case .footerView: return .footerView
             case .behindPageBackground: return .underPageBackground
             case .windowBackground: return .windowBackground
             }
@@ -168,6 +174,7 @@ fileprivate extension VisualEffect {
                 return .withinWindow
             case .contentBackground(let behindWindow),
                     .headerView(let behindWindow),
+                    .footerView(let behindWindow)
                     .behindPageBackground(let behindWindow):
                 return behindWindow ? .behindWindow : .withinWindow
             }

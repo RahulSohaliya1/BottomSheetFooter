@@ -7,13 +7,14 @@
 
 import SwiftUI
 
-public struct BottomSheet<HContent: View, MContent: View, V: View>: View {
+public struct BottomSheet<HContent: View, FContent: View, MContent: View, V: View>: View {
     
     @Binding private var bottomSheetPosition: BottomSheetPosition
     
     // Views
     private let view: V
     private let headerContent: HContent?
+    private let footerContent: FContent?
     private let mainContent: MContent
     
     private let switchablePositions: [BottomSheetPosition]
@@ -30,6 +31,7 @@ public struct BottomSheet<HContent: View, MContent: View, V: View>: View {
             BottomSheetView(
                 bottomSheetPosition: self.$bottomSheetPosition,
                 headerContent: self.headerContent,
+                footerContent: self.footerContent,
                 mainContent: self.mainContent,
                 switchablePositions: self.switchablePositions,
                 configuration: self.configuration
@@ -42,12 +44,14 @@ public struct BottomSheet<HContent: View, MContent: View, V: View>: View {
         bottomSheetPosition: Binding<BottomSheetPosition>,
         switchablePositions: [BottomSheetPosition],
         headerContent: HContent?,
+        footerContent: FContent?,
         mainContent: MContent,
         view: V
     ) {
         self._bottomSheetPosition = bottomSheetPosition
         self.switchablePositions = switchablePositions
         self.headerContent = headerContent
+        self.footerContent = footerContent
         self.mainContent = mainContent
         self.view = view
     }
@@ -56,6 +60,7 @@ public struct BottomSheet<HContent: View, MContent: View, V: View>: View {
         bottomSheetPosition: Binding<BottomSheetPosition>,
         switchablePositions: [BottomSheetPosition],
         title: String?,
+        footerContent: FContent,
         content: MContent,
         view: V
     ) {
@@ -73,6 +78,7 @@ public struct BottomSheet<HContent: View, MContent: View, V: View>: View {
                     return nil
                 }
             }(),
+            footerContent: footerContent,
             mainContent: content,
             view: view
         )
@@ -91,18 +97,18 @@ public extension View {
     /// - Parameter headerContent: A view that is used as header content for the BottomSheet.
     /// You can use a String that is displayed as title instead.
     /// - Parameter mainContent: A view that is used as main content for the BottomSheet.
-    func bottomSheet<HContent: View, MContent: View>(
+    func bottomSheet<HContent: View, FContent: View, MContent: View>(
         bottomSheetPosition: Binding<BottomSheetPosition>,
         switchablePositions: [BottomSheetPosition],
-        @ViewBuilder headerContent: () -> HContent? = {
-            return nil
-        },
+        @ViewBuilder headerContent: () -> HContent? = { nil },
+        @ViewBuilder footerContent: () -> FContent? = { nil },
         @ViewBuilder mainContent: () -> MContent
-    ) -> BottomSheet<HContent, MContent, Self> {
+    ) -> BottomSheet<HContent, FContent, MContent, Self> {
         BottomSheet(
             bottomSheetPosition: bottomSheetPosition,
             switchablePositions: switchablePositions,
             headerContent: headerContent(),
+            footerContent: footerContent(),
             mainContent: mainContent(),
             view: self
         )
@@ -120,18 +126,21 @@ public extension View {
     /// - Parameter content: A view that is used as main content for the BottomSheet.
     typealias TitleContent = ModifiedContent<Text, _EnvironmentKeyWritingModifier<Int?>>
     
-    func bottomSheet<MContent: View>(
+    func bottomSheet<MContent: View, FContent: View>(
         bottomSheetPosition: Binding<BottomSheetPosition>,
         switchablePositions: [BottomSheetPosition],
         title: String? = nil,
+        @ViewBuilder footerContent: () -> FContent? = { nil },
         @ViewBuilder content: () -> MContent
-    ) -> BottomSheet<TitleContent, MContent, Self> {
+    ) -> BottomSheet<TitleContent, FContent, MContent, Self> {
         BottomSheet(
             bottomSheetPosition: bottomSheetPosition,
             switchablePositions: switchablePositions,
             title: title,
+            footerContent: footerContent()!,
             content: content(),
             view: self
         )
     }
+
 }

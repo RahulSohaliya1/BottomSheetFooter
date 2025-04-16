@@ -28,6 +28,7 @@ internal struct BottomSheetView<HContent: View, MContent: View>: View {
     
     // View heights
     @State var headerContentHeight: CGFloat = 0
+    @State var footerContentHeight: CGFloat = 0
     @State var dynamicMainContentHeight: CGFloat = 0
     
 #if !os(macOS)
@@ -36,6 +37,7 @@ internal struct BottomSheetView<HContent: View, MContent: View>: View {
     
     // Views
     let headerContent: HContent?
+    let footerContent: FContent?
     let mainContent: MContent
     
     let switchablePositions: [BottomSheetPosition]
@@ -115,6 +117,7 @@ internal struct BottomSheetView<HContent: View, MContent: View>: View {
                 self.configuration.animation,
                 value: self.headerContentHeight
             )
+            .animation(self.configuration.animation, value: self.footerContentHeight)
             .animation(
                 self.configuration.animation,
                 value: self.dynamicMainContentHeight

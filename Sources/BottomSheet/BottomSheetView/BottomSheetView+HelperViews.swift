@@ -48,6 +48,11 @@ internal extension BottomSheetView {
             if self.configuration.isResizable && self.configuration.isDragIndicatorShown && self.isIPadFloatingOrMac {
                 self.dragIndicator(with: geometry)
             }
+            
+            // Footer content
+            if self.footerContent != nil {
+                self.footer(with: geometry)
+            }
         }
         // Set the height and width to its calculated values
         // The content should be aligned to the top on iPhone,
@@ -131,6 +136,10 @@ internal extension BottomSheetView {
             if self.headerContent != nil || self.configuration.isCloseButtonShown {
                 self.header(with: geometry)
             }
+            
+            if self.footerContent != nil {
+                self.footer(with: geometry)
+            }
         }
         // Reset dynamic main content height if it is hidden
         .onReceive(Just(self.bottomSheetPosition.isBottom)) { isBottom in
@@ -160,6 +169,13 @@ internal extension BottomSheetView {
                 self.headerContentHeight = 0
             }
         }
+        .onReceive(Just(self.footerContent)) { headerContent in
+            if headerContent == nil {
+                // Header content is hidden, so the geometry reader can't update its height
+                // But we can, because when it is hidden its height is 0
+                self.footerContentHeight = 0
+            }
+        }
     }
     
     func main(with geometry: GeometryProxy) -> some View {
@@ -181,8 +197,7 @@ internal extension BottomSheetView {
                 // Main content
                 self.mainContent
                 // Make the main content drag-able if content drag is enabled
-                // highPriorityGesture is required to make dragging the bottom sheet work even when user starts dragging on buttons or other pressable items
-                    .highPriorityGesture(
+                    .gesture(
                         self.configuration.isContentDragEnabled && self.configuration.isResizable ?
                         self.dragGesture(with: geometry) : nil
                     )
@@ -203,9 +218,14 @@ internal extension BottomSheetView {
             self.headerContentHeight
         )
         // Add padding to the bottom to compensate for the keyboard (if desired)
+//        .padding(
+//            .bottom,
+//            self.mainContentBottomPadding
+//        )
+        
         .padding(
             .bottom,
-            self.mainContentBottomPadding
+            self.footerContentHeight
         )
         // Make the main content transition via move
         .transition(.move(
@@ -326,6 +346,29 @@ internal extension BottomSheetView {
         )
     }
     
+    func footer(with geometry: GeometryProxy) -> some View {
+        VStack {
+            // Footer content goes here
+            if let footerContent = self.footerContent {
+                footerContent
+                    .padding([.top, .leading, .trailing])
+            }
+            // Add a separator line or any design for the footer if needed
+            Divider()
+                .padding(.top, 10)
+        }
+        .frame(maxWidth: .infinity)
+        // Get header content size
+        .background(self.footerGeometryReader)
+        // Make the header drag-able
+        .gesture(
+            self.configuration.isResizable ? self.dragGesture(with: geometry) : nil
+        )
+    }
+    
+    // (Rest of the code remains unchanged)
+    
+    
     var closeButton: some View {
         Button(action: self.closeSheet) {
             Image(
@@ -360,6 +403,24 @@ internal extension BottomSheetView {
                 }
                 .onReceive(Just(self.configuration.isResizable)) { _ in
                     self.headerContentHeight = headerGeometry.size.height
+                }
+        }
+    }
+    
+    var footerGeometryReader: some View {
+        GeometryReader { footerGeometry in
+            Color.clear
+                .onReceive(Just(self.footerContent)) { _ in
+                    self.footerContentHeight = footerGeometry.size.height
+                }
+                .onReceive(Just(self.configuration.isCloseButtonShown)) { _ in
+                    self.footerContentHeight = footerGeometry.size.height
+                }
+                .onReceive(Just(self.configuration.isDragIndicatorShown)) { _ in
+                    self.footerContentHeight = footerGeometry.size.height
+                }
+                .onReceive(Just(self.configuration.isResizable)) { _ in
+                    self.footerContentHeight = footerGeometry.size.height
                 }
         }
     }

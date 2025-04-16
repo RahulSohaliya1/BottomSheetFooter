@@ -58,6 +58,10 @@ internal extension BottomSheetView {
         return self.headerContent is ModifiedContent<Text, _EnvironmentKeyWritingModifier<Int?>>
     }
     
+    var isViewAsFooterContent: Bool {
+        return self.footerContent is AnyView
+    }
+    
     // The height of the spacer when position is bottom
     var bottomPositionSpacerHeight: CGFloat? {
         // Only limit height when dynamic
@@ -88,12 +92,21 @@ internal extension BottomSheetView {
     }
     
     // The minimum height of the BottomSheet
+//    var minBottomSheetHeight: CGFloat {
+//        // Header content and drag indicator height
+//        return self.headerContentHeight + (
+//            self.configuration.isResizable && self.configuration.isDragIndicatorShown ? 20 : 0
+//        )
+//    }
+    
+    // The minimum height of the BottomSheet
     var minBottomSheetHeight: CGFloat {
         // Header content and drag indicator height
         return self.headerContentHeight + (
             self.configuration.isResizable && self.configuration.isDragIndicatorShown ? 20 : 0
-        )
+        ) + (self.isViewAsFooterContent ? self.footerContentHeight : 0)  // Added footer height
     }
+
     
     // The maximum height of the BottomSheet
     func maxBottomSheetHeight(with geometry: GeometryProxy) -> CGFloat {
@@ -109,8 +122,8 @@ internal extension BottomSheetView {
         case .dynamic, .dynamicTop, .dynamicBottom:
             // Main content, header content and drag indicator height
             return self.dynamicMainContentHeight + self.headerContentHeight + (
-                self.configuration.isResizable && self.configuration.isDragIndicatorShown ? 20 : 0
-            )
+                       self.configuration.isResizable && self.configuration.isDragIndicatorShown ? 20 : 0
+                   ) + (self.isViewAsFooterContent ? self.footerContentHeight : 0)  // Added footer height
         case .relative(let value), .relativeBottom(let value), .relativeTop(let value):
             // Percentage of the max height
             return self.maxBottomSheetHeight(with: geometry) * value
@@ -124,16 +137,16 @@ internal extension BottomSheetView {
         if self.bottomSheetPosition.isDynamic && self.dynamicMainContentHeight < max(
             self.maxBottomSheetHeight(with: geometry) - self.translation - self.headerContentHeight - (
                 self.configuration.isResizable && self.configuration.isDragIndicatorShown ? 20 : 0
-            ),
+            ) - (self.isViewAsFooterContent ? self.footerContentHeight : 0),  // Subtracted footer height
             0
         ) {
             // Let dynamic content take all space it wants, as long as it is smaller than the allowed height
             return nil
         } else {
             // The max height of the main content is the height of the BottomSheet
-            // without the header and drag indicator
+            // without the header, footer, and drag indicator
             return max(
-                self.height(with: geometry) - self.headerContentHeight - (
+                self.height(with: geometry) - self.headerContentHeight - self.footerContentHeight - (
                     self.configuration.isResizable && self.configuration.isDragIndicatorShown ? 20 : 0
                 ),
                 0
